@@ -2,6 +2,10 @@ import type { PokeApiListResponse, PokeResponse } from '../types/pokemon';
 
 let cache: PokeResponse | null = null;
 
+export function clearPokemonCache() {
+  cache = null;
+}
+
 export async function fetchPokemons(
   options?: RequestInit
 ): Promise<PokeResponse> {
@@ -14,11 +18,20 @@ export async function fetchPokemons(
 
     const res = await fetch(url, options);
 
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(
-        `Failed to fetch: ${res.status} ${res.statusText} - ${errText}`
-      );
+   if (!res.ok) {
+      if (res.status >= 500) {
+        throw new Error(
+          'Server is temporarily unavailable. Please try again later.'
+        );
+      }
+
+      if (res.status >= 400) {
+        throw new Error(
+          'Failed to load Pokémon data. Please check your request.'
+        );
+      }
+
+      throw new Error('Something went wrong.');
     }
 
     const data: PokeApiListResponse = await res.json();

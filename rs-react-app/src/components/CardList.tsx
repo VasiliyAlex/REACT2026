@@ -16,12 +16,21 @@ interface Props {
   search: string;
 }
 
+interface FlavorTextEntry {
+  flavor_text: string;
+  language: {
+    name: string;
+  };
+}
+
 export class CardList extends React.Component<Props, State> {
   state: State = {
     pokemons: [],
     loading: false,
     error: '',
   };
+  private requestId = 0;
+
 
   componentDidUpdate(prevProps: Props) {
   if (prevProps.search !== this.props.search) {
@@ -29,14 +38,19 @@ export class CardList extends React.Component<Props, State> {
   }
 }
 
+
 componentDidMount() {
   this.loadPokemons();
 }
 
   async loadPokemons() {
+     const currentRequest = ++this.requestId;
     this.setState({ loading: true, error: '' });
+
+
     try {
       const data = await fetchPokemons();
+        if (currentRequest !== this.requestId) return;
       const list = data.results;
       const filtered = list
         .filter((pokemon) =>
@@ -52,7 +66,7 @@ componentDidMount() {
           ]);
 
           const description = species.flavor_text_entries.find(
-            (entry: any) => entry.language.name === 'en'
+            (entry: FlavorTextEntry) => entry.language.name === 'en'
           )?.flavor_text;
 
           return {
