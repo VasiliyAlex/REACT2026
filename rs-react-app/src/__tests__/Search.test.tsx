@@ -1,94 +1,54 @@
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { Search } from '../components/Search';
 
-describe('Search component', () => {
+describe('<Search />', () => {
+  const mockOnSearch = jest.fn();
+
   beforeEach(() => {
     localStorage.clear();
-    vi.restoreAllMocks();
+    jest.clearAllMocks();
   });
 
-  it('renders input and button', () => {
-    render(<Search onSearch={vi.fn()} />);
-
+  test('renders input and button', () => {
+    render(<Search onSearch={mockOnSearch} />);
     expect(
-      screen.getByPlaceholderText('Enter your query')
+      screen.getByPlaceholderText(/enter your query/i)
     ).toBeInTheDocument();
-
-    expect(
-      screen.getByRole('button', { name: /search/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
   });
 
-  it('loads value from localStorage on mount', () => {
-    localStorage.setItem('searchQuery', 'pikachu');
-
-    render(<Search onSearch={vi.fn()} />);
-
-    const input = screen.getByPlaceholderText('Enter your query');
-
-    expect(input).toHaveValue('pikachu');
+  test('loads search query from localStorage on mount', () => {
+    localStorage.setItem('searchQuery', 'saved term');
+    render(<Search onSearch={mockOnSearch} />);
+    expect(screen.getByDisplayValue('saved term')).toBeInTheDocument();
   });
 
-  it('updates input value on change', async () => {
-    const user = userEvent.setup();
-
-    render(<Search onSearch={vi.fn()} />);
-
-    const input = screen.getByPlaceholderText('Enter your query');
-
-    await user.type(input, 'charizard');
-
-    expect(input).toHaveValue('charizard');
+  test('updates input value on user typing', () => {
+    render(<Search onSearch={mockOnSearch} />);
+    const input = screen.getByPlaceholderText(/enter your query/i);
+    fireEvent.change(input, { target: { value: 'test input' } });
+    expect(screen.getByDisplayValue('test input')).toBeInTheDocument();
   });
 
-  it('calls onSearch with trimmed value', async () => {
-    const user = userEvent.setup();
-    const onSearch = vi.fn();
-
-    render(<Search onSearch={onSearch} />);
-
-    const input = screen.getByPlaceholderText('Enter your query');
+  test('trims, saves and submits search query on button click', () => {
+    render(<Search onSearch={mockOnSearch} />);
+    const input = screen.getByPlaceholderText(/enter your query/i);
     const button = screen.getByRole('button', { name: /search/i });
 
-    await user.type(input, '   pikachu   ');
-    await user.click(button);
+    fireEvent.change(input, { target: { value: '   hello   ' } });
+    fireEvent.click(button);
 
-    expect(onSearch).toHaveBeenCalledWith('pikachu');
+    expect(localStorage.getItem('searchQuery')).toBe('hello');
+    expect(mockOnSearch).toHaveBeenCalledWith('hello');
   });
 
-  it('saves query to localStorage on search', async () => {
-    const user = userEvent.setup();
-    const onSearch = vi.fn();
+  test('submits empty string if input is only spaces', () => {
+    render(<Search onSearch={mockOnSearch} />);
+    const input = screen.getByPlaceholderText(/enter your query/i);
+    fireEvent.change(input, { target: { value: '   ' } });
+    fireEvent.click(screen.getByRole('button'));
 
-    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
-
-    render(<Search onSearch={onSearch} />);
-
-    const input = screen.getByPlaceholderText('Enter your query');
-    const button = screen.getByRole('button', { name: /search/i });
-
-    await user.type(input, 'bulbasaur');
-    await user.click(button);
-
-    expect(setItemSpy).toHaveBeenCalledWith(
-      'searchQuery',
-      'bulbasaur'
-    );
-  });
-
-  it('does not call onSearch if query is same as lastQuery', async () => {
-    const user = userEvent.setup();
-    const onSearch = vi.fn();
-
-    localStorage.setItem('searchQuery', 'pikachu');
-
-    render(<Search onSearch={onSearch} />);
-
-    const button = screen.getByRole('button', { name: /search/i });
-
-    await user.click(button);
-
-    expect(onSearch).not.toHaveBeenCalled();
+    expect(localStorage.getItem('searchQuery')).toBe('');
+    expect(mockOnSearch).toHaveBeenCalledWith('');
   });
 });

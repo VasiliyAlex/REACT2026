@@ -1,35 +1,20 @@
-import React from 'react';
-import { Search } from './components/Search';
-import { CardList } from './components/CardList';
-import { ErrorButton } from './components/ErrorButton';
-import './App.css';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { HomePage } from './pages/HomePage';
+import { AboutPage } from './pages/AboutPages';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { DetailsPage } from './pages/DetailsPage';
+import { Header } from './components/Header';
 
-interface State {
-  query: string;
-  triggerError: boolean;
-}
-
-export class App extends React.Component {
-  state: State = {
-    query: localStorage.getItem('searchQuery') || '',
-    triggerError: false,
-  };
-
-  onSearch = (query: string) => {
-    this.setState({ query });
-  };
-
-  render() {
-    if (this.state.triggerError) {
-      throw new Error('Test error');
-    }
-
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Search onSearch={this.onSearch} />
-        <CardList search={this.state.query} />
-        <ErrorButton onClick={() => this.setState({ triggerError: true })} />
-      </div>
-    );
-  }
-}
+export const App = () => (
+  <>
+    <Header />
+    <Routes>
+      <Route path="/" element={<Navigate to="/1" />} />
+      <Route path="/:pageNumber" element={<HomePage />}>
+        <Route path=":pokemonId" element={<DetailsPage />} />
+      </Route>
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  </>
+);

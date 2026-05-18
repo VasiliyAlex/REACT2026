@@ -1,113 +1,111 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { fetchPokemons } from '../api/fetchPokemons';
+import { type PokemonDetails } from '../types/pokemon';
 import { fetchPokemonDetails } from '../api/fetchPokemonDetails';
-import { fetchPokemonSpecies } from '../api/fetchPokemonSpecies';
-import type { PokemonDetails } from '../types/pokemon';
 import { Card } from './Card';
 import { SkeletonCard } from './SkeletonCard';
+import { Pagination } from './Pagination';
 
-interface State {
-  pokemons: PokemonDetails[];
-  loading: boolean;
-  error: string;
-}
-
-interface Props {
+type Props = {
   search: string;
-}
+  page: number;
+  onPageChange: (newPage: number) => void;
+  onCardClick: (id: string) => void;
+  setIsFading: (value: boolean) => void;
+  isFading: boolean;
+};
 
-interface FlavorTextEntry {
-  flavor_text: string;
-  language: {
-    name: string;
-  };
-}
+export const CardList: React.FC<Props> = ({
+  search,
+  page,
+  onPageChange,
+  onCardClick,
+  setIsFading,
+}) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [pokemons, setPokemons] = useState<PokemonDetails[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [localFading, setLocalFading] = useState(false);
 
-export class CardList extends React.Component<Props, State> {
-  state: State = {
-    pokemons: [],
-    loading: false,
-    error: '',
-  };
-  private requestId = 0;
+  useEffect(() => {
+    const controller = new AbortController();
 
+    const timeoutId = setTimeout(async () => {
+      setLocalFading(true);
+      setLoading(true);
+      setError('');
 
-  componentDidUpdate(prevProps: Props) {
-  if (prevProps.search !== this.props.search) {
-    this.loadPokemons();
-  }
-}
+      try {
+        const data = await fetchPokemons(search, page, {
+          signal: controller.signal,
+        });
+        const detailsArray = await Promise.all(
+          data.results.map((p) =>
+            fetchPokemonDetails(p.name, { signal: controller.signal })
+          )
+        );
 
+        setPokemons(page === 1 ? detailsArray : [...detailsArray]);
+        setTotalCount(data.total_records);
+      } catch (e) {
+        if (e instanceof Error) {
+          if (e.name !== 'AbortError') {
+            setError(e.message);
+          }
+        } else {
+          setError('Unknown error');
+        }
+      } finally {
+        setLoading(false);
+        setLocalFading(false);
+        setIsFading(false);
+      }
+    }, 200);
 
-componentDidMount() {
-  this.loadPokemons();
-}
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [page, search, setIsFading]);
 
-  async loadPokemons() {
-     const currentRequest = ++this.requestId;
-    this.setState({ loading: true, error: '' });
+  const totalPages = Math.ceil(totalCount / 12);
 
+  if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
-    try {
-      const data = await fetchPokemons();
-        if (currentRequest !== this.requestId) return;
-      const list = data.results;
-      const filtered = list
-        .filter((pokemon) =>
-          pokemon.name.toLowerCase().includes(this.props.search.toLowerCase())
-        )
-        .slice(0, 12);
-
-      const details = await Promise.all(
-        filtered.map(async (pokemon) => {
-          const [detail, species] = await Promise.all([
-            fetchPokemonDetails(pokemon.name),
-            fetchPokemonSpecies(pokemon.name),
-          ]);
-
-          const description = species.flavor_text_entries.find(
-            (entry: FlavorTextEntry) => entry.language.name === 'en'
-          )?.flavor_text;
-
-          return {
-            ...detail,
-            description,
-          };
-        })
-      );
-
-      this.setState({
-        pokemons: details,
-        loading: false,
-      });
-    } catch (e) {
-      this.setState({
-        error: e instanceof Error ? e.message : 'Unknown error',
-        loading: false,
-      });
-    }
-  }
-
-  render() {
-    const { pokemons, loading, error } = this.state;
-
-    if (loading) {
-      return (
-      <div className="p-4 flex flex-wrap gap-4 justify-center items-center border border-black">
-          {Array.from({ length: 12 }).map((_, index) => (
-            <SkeletonCard key={index} />
-          ))}
-        </div>
-      );
-    }
-    if (error) return <div className="p-4">Error: {error}</div>;
-
-    return (
-      <div className="p-4 mt-20 flex flex-wrap gap-4 justify-center items-center border border-black">
-         {pokemons.map((pokemon) => (
-      <Card key={pokemon.id} pokemon={pokemon} />
-    ))}
+  return (
+    <div>
+      <div className="min-h-[600px] p-4 flex flex-wrap gap-2 justify-center items-center relative">
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 12 }).map((_, index) => (
+              <SkeletonCard key={`skeleton-${index}`} />
+            ))}
+          </div>
+        ) : (
+          <div
+            className={`flex flex-wrap justify-center gap-4
+            transition-opacity duration-500
+            ${localFading ? 'opacity-0' : 'opacity-100'}`}
+          >
+            {pokemons.map((pokemon) => (
+              <Card
+                key={pokemon.id}
+                pokemon={pokemon}
+                onClick={() => onCardClick(pokemon.id.toString())}
+              />
+            ))}
+          </div>
+        )}
       </div>
-    );
-  }
-}
+
+      {!loading && totalPages > 1 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+        />
+      )}
+    </div>
+  );
+};

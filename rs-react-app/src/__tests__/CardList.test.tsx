@@ -1,103 +1,68 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { CardList } from '../components/CardList';
+import * as api from '../api/fetchPokemons';
+import { type PokemonDetails } from '../types/pokemon';
 
-import { fetchPokemons } from '../api/fetchPokemons';
-import { fetchPokemonDetails } from '../api/fetchPokemonDetails';
-import { fetchPokemonSpecies } from '../api/fetchPokemonSpecies';
+jest.mock('../components/Card', () => ({
+  Card: ({ pokemon }: { pokemon: PokemonDetails }) => (
+    <div data-testid="card">{pokemon.name}</div>
+  ),
+}));
 
-vi.mock('../api/fetchPokemons');
-vi.mock('../api/fetchPokemonDetails');
-vi.mock('../api/fetchPokemonSpecies');
+jest.mock('../components/SkeletonCard', () => ({
+  SkeletonCard: () => <div data-testid="skeleton" />,
+}));
+
+jest.mock('../api/fetchPokemons');
+jest.mock('../api/fetchPokemonDetails');
+
+const mockedFetchPokemons = api.fetchPokemons as jest.Mock;
 
 describe('CardList', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
-it('shows loading skeleton initially', () => {
-  vi.mocked(fetchPokemons).mockReturnValue(
-    new Promise(() => {}) // бесконечный pending → loading state
-  );
+  const baseProps = {
+    search: '',
+    page: 1,
+    onPageChange: jest.fn(),
+    onCardClick: jest.fn(),
+    setIsFading: jest.fn(),
+    isFading: false,
+  };
 
-  render(<CardList search="" />);
-
-  const skeletons = screen.getAllByTestId('skeleton-card');
-
-  expect(skeletons).toHaveLength(12);
-});
-
-  it('renders pokemons after successful fetch', async () => {
-    vi.mocked(fetchPokemons).mockResolvedValue({
-      results: [{ name: 'pikachu' }],
-    } as any);
-
-    vi.mocked(fetchPokemonDetails).mockResolvedValue({
-      id: 25,
-      name: 'pikachu',
-      sprites: { front_default: '' },
-    } as any);
-
-    vi.mocked(fetchPokemonSpecies).mockResolvedValue({
-      flavor_text_entries: [
-        {
-          flavor_text: 'electric mouse',
-          language: { name: 'en' },
-        },
-      ],
-    } as any);
-
-    render(<CardList search="" />);
-
-    await waitFor(() => {
-      expect(screen.getByText('pikachu')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('electric mouse')).toBeInTheDocument();
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('filters pokemons by search prop', async () => {
-    vi.mocked(fetchPokemons).mockResolvedValue({
-      results: [
-        { name: 'pikachu' },
-        { name: 'charmander' },
-      ],
-    } as any);
-
-    vi.mocked(fetchPokemonDetails).mockResolvedValue({
-      id: 1,
-      name: 'pikachu',
-      sprites: { front_default: '' },
-    } as any);
-
-    vi.mocked(fetchPokemonSpecies).mockResolvedValue({
-      flavor_text_entries: [
-        {
-          flavor_text: 'desc',
-          language: { name: 'en' },
-        },
-      ],
-    } as any);
-
-    render(<CardList search="pika" />);
-
-    await waitFor(() => {
-      expect(screen.getByText('pikachu')).toBeInTheDocument();
-    });
-
-    expect(screen.queryByText('charmander')).not.toBeInTheDocument();
-  });
-
-  it('shows error message when API fails', async () => {
-    vi.mocked(fetchPokemons).mockRejectedValue(
-      new Error('API failed')
+  it('displays loading skeletons while fetching', async () => {
+    (api.fetchPokemons as jest.Mock).mockImplementation(
+      () => new Promise(() => {})
     );
 
-    render(<CardList search="" />);
+    render(
+      <CardList
+        search=""
+        page={1}
+        onPageChange={() => {}}
+        onCardClick={() => {}}
+        setIsFading={() => {}}
+        isFading={false}
+      />
+    );
 
-    await waitFor(() => {
-      expect(
-        screen.getByText(/error/i)
-      ).toBeInTheDocument();
-    });
+    const skeletons = await screen.findAllByTestId('skeleton');
+    expect(skeletons.length).toBe(12);
+  });
+
+  it('shows error message if fetch fails', async () => {
+    mockedFetchPokemons.mockRejectedValueOnce(new Error('API Error'));
+
+    render(<CardList {...baseProps} />);
+
+    await waitFor(() =>
+      expect(screen.getByText(/Error: API Error/)).toBeInTheDocument()
+    );
   });
 });

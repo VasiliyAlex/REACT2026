@@ -1,0 +1,1 @@
+cd rs-react-app && npx --no -- commitlint --edit ${1}
