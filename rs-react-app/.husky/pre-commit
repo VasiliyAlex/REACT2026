@@ -1,1 +1,1 @@
-npm run lint
+cd rs-react-app && npx lint-staged

@@ -13,8 +13,6 @@ export async function fetchPokemonDetails(
 
     const data: PokemonDetails = await res.json();
     return data;
-    
-    
   } catch (e) {
     console.error('Details fetch failed:', e);
     throw new Error(`Error loading details for ${name}`);

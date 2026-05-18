@@ -1,4 +1,9 @@
 {
+  "compilerOptions": {
+    "types": ["@testing-library/jest-dom"],
+    "forceConsistentCasingInFileNames": true,
+    "strict": true
+  },
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },

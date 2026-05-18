@@ -17,7 +17,6 @@ export interface PokemonDetails {
   weight: number;
   sprites: PokemonSprites;
   types: PokemonType[];
-    description?: string;
 }
 
 export interface Pokemon {
@@ -32,4 +31,6 @@ export interface PokeApiListResponse {
 
 export interface PokeResponse {
   results: Pokemon[];
+  total_records: number;
+  total_pages: number;
 }

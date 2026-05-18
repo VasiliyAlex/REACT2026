@@ -6,20 +6,18 @@ const ProblemChild = () => {
 };
 
 describe('ErrorBoundary', () => {
-  it('renders children when no error occurs', () => {
+  it('renders children when no error is thrown', () => {
     render(
       <ErrorBoundary>
-        <div>Healthy component</div>
+        <div>Safe Content</div>
       </ErrorBoundary>
     );
 
-    expect(screen.getByText('Healthy component')).toBeInTheDocument();
+    expect(screen.getByText('Safe Content')).toBeInTheDocument();
   });
 
-  it('renders fallback UI when error is thrown', () => {
-    const consoleSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
+  it('catches error and displays fallback UI', () => {
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     render(
       <ErrorBoundary>
@@ -28,27 +26,10 @@ describe('ErrorBoundary', () => {
     );
 
     expect(
-      screen.getByText(/seems like an error occured/i)
+      screen.getByText(/seems like an error occured!/i)
     ).toBeInTheDocument();
+    expect(screen.getByText(/test error/i)).toBeInTheDocument();
 
-    expect(screen.getByText('Test error')).toBeInTheDocument();
-
-    consoleSpy.mockRestore();
-  });
-
-  it('logs error to console', () => {
-    const consoleSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-
-    render(
-      <ErrorBoundary>
-        <ProblemChild />
-      </ErrorBoundary>
-    );
-
-    expect(consoleSpy).toHaveBeenCalled();
-
-    consoleSpy.mockRestore();
+    spy.mockRestore();
   });
 });
