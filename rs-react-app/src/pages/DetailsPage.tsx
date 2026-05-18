@@ -7,13 +7,13 @@ import { useSearchParams } from 'react-router-dom';
 import { SkeletonDetails } from '../components/SkeletonDetails';
 
 export const DetailsPage = () => {
-  const { pokemonId, pageNumber } = useParams();
+  const { detailsId, pageNumber } = useParams();
   const [pokemon, setPokemon] = useState<PokemonDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const id = pokemonId;
+  const id = detailsId;
 
   const handleClose = () => {
     const q = searchParams.get('q') || '';
@@ -24,21 +24,23 @@ export const DetailsPage = () => {
 
   useEffect(() => {
     if (!id) return;
+
     const loadPokemon = async () => {
-      const start = Date.now();
+      setLoading(true);
+      setPokemon(null);
+      setError('');
+
       try {
-        setLoading(true);
-        setError('');
         const data = await fetchPokemonDetails(id);
-        setPokemon(data);
+        setPokemon(data); // даже null сюда можно
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Unknown error');
+        setPokemon(null);
       } finally {
-        const elapsed = Date.now() - start;
-        const delay = Math.max(2000 - elapsed, 0);
-        setTimeout(() => setLoading(false), delay);
+        setLoading(false);
       }
     };
+
     loadPokemon();
   }, [id]);
 

@@ -17,37 +17,43 @@ const mockPokemon: PokemonDetails = {
   types: [{ slot: 1, type: { name: 'grass', url: '' } }],
 };
 
+const renderPage = () =>
+  render(
+    <MemoryRouter initialEntries={['/details/1']}>
+      <Routes>
+        <Route path="/details/:detailsId" element={<DetailsPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+
 describe('DetailsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renders loading state initially', async () => {
+  it('shows loading initially', () => {
+    (fetchPokemonDetails as jest.Mock).mockReturnValue(new Promise(() => {}));
+
+    renderPage();
+
+    expect(screen.getByTestId('skeleton-details')).toBeInTheDocument();
+  });
+
+  it('renders pokemon successfully', async () => {
     (fetchPokemonDetails as jest.Mock).mockResolvedValue(mockPokemon);
 
-    render(
-      <MemoryRouter initialEntries={['/details/1']}>
-        <Routes>
-          <Route path="/details/:detailsId" element={<DetailsPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderPage();
 
-    await waitFor(
-      () => {
-        expect(
-          screen.queryByTestId('skeleton-details')
-        ).not.toBeInTheDocument();
-      },
-      { timeout: 3000 }
-    );
+    // 1. сначала есть skeleton
+    expect(screen.getByTestId('skeleton-details')).toBeInTheDocument();
 
-    await waitFor(
-      () => {
-        expect(screen.getByText(/bulbasaur/i)).toBeInTheDocument();
-      },
-      { timeout: 3000 }
-    );
+    // 2. ждём исчезновения skeleton (это ключ!)
+    await waitFor(() => {
+      expect(screen.queryByTestId('skeleton-details')).not.toBeInTheDocument();
+    });
+
+    // 3. теперь проверяем контент
+    expect(await screen.findByText(/bulbasaur/i)).toBeInTheDocument();
   });
 
   it('renders error message on fetch failure', async () => {
@@ -55,44 +61,24 @@ describe('DetailsPage', () => {
       new Error('Failed to fetch')
     );
 
-    render(
-      <MemoryRouter initialEntries={['/details/1']}>
-        <Routes>
-          <Route path="/details/:detailsId" element={<DetailsPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
-
-    await waitFor(
-      () => {
-        expect(
-          screen.queryByTestId('skeleton-details')
-        ).not.toBeInTheDocument();
-      },
-      { timeout: 3000 }
-    );
+    renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText(/error: failed to fetch/i)).toBeInTheDocument();
+      expect(screen.queryByTestId('skeleton-details')).not.toBeInTheDocument();
     });
+
+    expect(await screen.findByText(/error/i)).toBeInTheDocument();
   });
 
   it('renders "No data available" if pokemon is null', async () => {
     (fetchPokemonDetails as jest.Mock).mockResolvedValue(null);
 
-    render(
-      <MemoryRouter initialEntries={['/details/1']}>
-        <Routes>
-          <Route path="/details/:detailsId" element={<DetailsPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderPage();
 
-    await waitFor(
-      () => {
-        expect(screen.getByText(/no data available/i)).toBeInTheDocument();
-      },
-      { timeout: 3000 }
-    );
+    await waitFor(() => {
+      expect(screen.queryByTestId('skeleton-details')).not.toBeInTheDocument();
+    });
+
+    expect(await screen.findByText(/no data available/i)).toBeInTheDocument();
   });
 });

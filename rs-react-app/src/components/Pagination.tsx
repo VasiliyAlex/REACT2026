@@ -19,7 +19,9 @@ export const Pagination = ({
     </button>
 
     <span className="px-3 py-1">
-      {currentPage} / {totalPages}
+      <span>{currentPage}</span>
+      <span>/</span>
+      <span>{totalPages}</span>
     </span>
 
     <button
