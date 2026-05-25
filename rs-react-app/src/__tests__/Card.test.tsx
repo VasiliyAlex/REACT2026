@@ -2,6 +2,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { Card } from '../components/Card';
 import '@testing-library/jest-dom';
 import { type PokemonDetails } from '../types/pokemon';
+import { Provider } from 'react-redux';
+import { store } from '../store';
 
 const mockPokemon: PokemonDetails = {
   id: 25,
@@ -24,12 +26,20 @@ const mockPokemon: PokemonDetails = {
 
 describe('Card Component', () => {
   it('renders the pokemon name', () => {
-    render(<Card pokemon={mockPokemon} onClick={() => {}} />);
+    render(
+      <Provider store={store}>
+        <Card pokemon={mockPokemon} onClick={() => {}} />
+      </Provider>
+    );
     expect(screen.getByText(mockPokemon.name)).toBeInTheDocument();
   });
 
   it('renders the pokemon image with correct src and alt', () => {
-    render(<Card pokemon={mockPokemon} onClick={() => {}} />);
+    render(
+      <Provider store={store}>
+        <Card pokemon={mockPokemon} onClick={() => {}} />
+      </Provider>
+    );
     const img = screen.getByRole('img') as HTMLImageElement;
     expect(img).toBeInTheDocument();
     expect(img.src).toBe(mockPokemon.sprites.front_default);
@@ -38,7 +48,11 @@ describe('Card Component', () => {
 
   it('calls onClick when the card is clicked', () => {
     const handleClick = jest.fn();
-    render(<Card pokemon={mockPokemon} onClick={handleClick} />);
+    render(
+      <Provider store={store}>
+        <Card pokemon={mockPokemon} onClick={handleClick} />
+      </Provider>
+    );
     const card = screen.getByRole('img').closest('div');
     if (card) fireEvent.click(card);
     expect(handleClick).toHaveBeenCalledTimes(1);
@@ -49,7 +63,11 @@ describe('Card Component', () => {
       ...mockPokemon,
       sprites: { front_default: '' },
     };
-    render(<Card pokemon={brokenPokemon} onClick={() => {}} />);
+    render(
+      <Provider store={store}>
+        <Card pokemon={brokenPokemon} onClick={() => {}} />
+      </Provider>
+    );
     const img = screen.queryByRole('img');
     expect(img).not.toBeInTheDocument();
   });

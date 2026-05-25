@@ -29,7 +29,6 @@ describe('ErrorBoundary', () => {
       screen.getByText(/seems like an error occured!/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/test error/i)).toBeInTheDocument();
-
     spy.mockRestore();
   });
 });

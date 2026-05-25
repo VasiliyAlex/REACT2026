@@ -1,11 +1,3 @@
-import {
-  personalQualities,
-  technicalSkills,
-  weaknesses,
-  education,
-  aboutDescription,
-} from '../data/aboutData';
-
 export const AboutPage = () => (
   <div className="p-4 max-w-3xl mx-auto">
     <h1 className="text-2xl font-bold mb-4">
@@ -16,7 +8,14 @@ export const AboutPage = () => (
       &nbsp;&nbsp;Привет! Я Василий, начинающий WEB-разработчик.
     </p>
 
-    <p className="mb-4">{aboutDescription}</p>
+    <p className="mb-4">
+      &nbsp;&nbsp;Я верю в то, что можно определять себя не по своей прошлой
+      работе, а по работе, которую я стремлюсь выполнить. Я ценю постоянное
+      обучение, самостоятельные вызовы и значимые занятия. Подпитываемый
+      безграничным энтузиазмом, я легко вдохновляюсь и всегда стремлюсь
+      следовать своим увлечениям. Я быстро учусь, способен освоить новые навыки
+      и легко управляю несколькими проектами.
+    </p>
 
     <p className="mb-6">
       &nbsp;&nbsp;В настоящее время я сосредоточен на изучении языка
@@ -25,30 +24,44 @@ export const AboutPage = () => (
 
     <h2 className="text-xl font-semibold mt-6 mb-2">Личные качества</h2>
     <ul className="list-disc list-inside mb-6">
-      {personalQualities.map((item, i) => (
-        <li key={i}>{item}</li>
-      ))}
+      <li>Навыки эффективного общения</li>
+      <li>Инновационный и дальновидный подход с напористостью</li>
+      <li>Самоорганизованность и умение работать самостоятельно</li>
+      <li>Грамотное управление временем для повышения эффективности</li>
+      <li>Адаптируемость к изменениям и непредвиденным препятствиям</li>
+      <li>Обучаем и готов учить других</li>
+      <li>Страсть и стремление к совершенству</li>
+      <li>По своей природе любопытен, скромен и смел</li>
+      <li>Мотивирован на решение новых задач</li>
+      <li>Восприимчив к ясной и конструктивной критике</li>
+      <li>Умение справляться со стрессом</li>
     </ul>
 
     <h2 className="text-xl font-semibold mt-6 mb-2">Технические навыки</h2>
     <ul className="list-disc list-inside mb-6">
-      {technicalSkills.map((item, i) => (
-        <li key={i}>{item}</li>
-      ))}
+      <li>HTML</li>
+      <li>CSS</li>
+      <li>JavaScript</li>
+      <li>React</li>
+      <li>Git</li>
+      <li>Figma, Pixso</li>
     </ul>
 
     <h2 className="text-xl font-semibold mt-6 mb-2">Недостатки</h2>
     <ul className="list-disc list-inside mb-6">
-      {weaknesses.map((item, i) => (
-        <li key={i}>{item}</li>
-      ))}
+      <li>Нет терпения к неэффективности</li>
+      <li>Быстрое или слишком поспешное принятие решений</li>
+      <li>Отсутствие мотивации, если мне не бросают вызов</li>
+      <li>Публичное выступление или презентация перед большой группой людей</li>
     </ul>
 
     <h2 className="text-xl font-semibold mt-6 mb-2">Образование</h2>
     <ul className="list-disc list-inside mb-6">
-      {education.map((item, i) => (
-        <li key={i}>{item}</li>
-      ))}
+      <li>PROWEB: курс &quot;WEB программирование&quot;</li>
+      <li>Самообразование</li>
+      <li>
+        Курсы в интернете, видеокурсы, книги, документация, форумы, статьи...
+      </li>
     </ul>
 
     <h2 className="text-xl font-semibold mt-6 mb-2">Контакты</h2>

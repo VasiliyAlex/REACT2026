@@ -5,16 +5,14 @@ const PAGE_LIMIT = 12;
 
 export async function fetchPokemons(
   query = '',
-  page = 1,
-  options?: RequestInit
+  page = 1
 ): Promise<PokeResponse> {
   const normalizedQuery = query.trim().toLowerCase();
 
   try {
     if (normalizedQuery) {
       const allRes = await fetch(
-        `https://pokeapi.co/api/v2/pokemon?limit=2000`,
-        options
+        `https://pokeapi.co/api/v2/pokemon?limit=2000`
       );
       if (!allRes.ok) {
         const errText = await allRes.text();
@@ -29,15 +27,16 @@ export async function fetchPokemons(
         pokemon.name.includes(normalizedQuery)
       );
 
-      const start = (page - 1) * PAGE_LIMIT;
-      const end = start + PAGE_LIMIT;
+      const totalFiltered = filtered.length;
+      const totalPages = Math.ceil(totalFiltered / PAGE_LIMIT);
 
-      const paginated = filtered.slice(start, end);
+      const start = (page - 1) * PAGE_LIMIT;
+      const paginatedResults = filtered.slice(start, start + PAGE_LIMIT);
 
       return {
-        results: paginated,
-        total_records: filtered.length,
-        total_pages: Math.ceil(filtered.length / PAGE_LIMIT),
+        results: paginatedResults,
+        total_records: totalFiltered,
+        total_pages: totalPages,
       };
     } else {
       const offset = (page - 1) * PAGE_LIMIT;
