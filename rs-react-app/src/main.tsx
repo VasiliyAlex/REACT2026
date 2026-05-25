@@ -1,10 +1,12 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
-import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { BrowserRouter } from 'react-router-dom';
-
+import { ThemeProvider } from './context/ThemeContext';
+import { RouterProvider } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { store } from './store/index';
+import { router } from './router/router';
 const container = document.getElementById('root');
 if (!container) {
   throw new Error('Root element not found');
@@ -12,10 +14,12 @@ if (!container) {
 
 createRoot(container).render(
   <StrictMode>
-    <BrowserRouter>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </BrowserRouter>
+    <Provider store={store}>
+      <ThemeProvider>
+        <ErrorBoundary>
+          <RouterProvider router={router} />
+        </ErrorBoundary>
+      </ThemeProvider>
+    </Provider>
   </StrictMode>
 );

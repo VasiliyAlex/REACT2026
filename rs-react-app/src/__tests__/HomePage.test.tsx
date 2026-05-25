@@ -59,7 +59,6 @@ describe('HomePage', () => {
     );
 
     fireEvent.click(screen.getByText('Next Page'));
-
     expect(container.innerHTML).toContain('Mocked CardList');
   });
 
@@ -91,5 +90,103 @@ describe('HomePage', () => {
     });
 
     expect(getByTestId('search-input')).toHaveValue('pikachu');
+  });
+
+  it('renders Outlet when id is present in the route', () => {
+    render(
+      <MemoryRouter initialEntries={['/1/25']}>
+        <Routes>
+          <Route path="/:page/:detailsId" element={<HomePage />}>
+            <Route path="" element={<div>Mocked Outlet</div>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Mocked Outlet')).toBeInTheDocument();
+  });
+
+  it('clears search params when input is empty', () => {
+    const { getByTestId } = render(
+      <MemoryRouter initialEntries={['/1?q=pikachu']}>
+        <Routes>
+          <Route path="/:page" element={<HomePage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    fireEvent.change(getByTestId('search-input'), {
+      target: { value: '   ' },
+    });
+
+    expect(getByTestId('search-input')).toHaveValue('   ');
+  });
+
+  it('sets isFading to true when fade button is clicked', () => {
+    render(
+      <MemoryRouter initialEntries={['/1']}>
+        <Routes>
+          <Route path="/:page" element={<HomePage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByText('Fade'));
+  });
+
+  it('navigates without query when search param is missing', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/1']}>
+        <Routes>
+          <Route path="/:page" element={<HomePage />} />
+          <Route path="/:page/:id" element={<div>Details Page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByText('Click Card'));
+    expect(container.innerHTML).toContain('Details Page');
+  });
+
+  it('navigates without query when search param is whitespace', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/1?q=   ']}>
+        <Routes>
+          <Route path="/:page" element={<HomePage />} />
+          <Route path="/:page/:id" element={<div>Details Page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByText('Next Page'));
+    expect(container.innerHTML).toContain('Mocked CardList');
+  });
+
+  it('does not append query in handleCardClick when search param is only spaces', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/1?q=   ']}>
+        <Routes>
+          <Route path="/:page" element={<HomePage />} />
+          <Route path="/:page/:detailsId" element={<div>Details Page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByText('Click Card'));
+    expect(container.innerHTML).toContain('Details Page');
+  });
+
+  it('appends query to URL in handlePageChange when q is non-empty', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/1?q=pikachu']}>
+        <Routes>
+          <Route path="/:page" element={<HomePage />} />
+          <Route path="/:page/:id" element={<div>Details Page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByText('Next Page'));
+    expect(container.innerHTML).toContain('Mocked CardList');
   });
 });

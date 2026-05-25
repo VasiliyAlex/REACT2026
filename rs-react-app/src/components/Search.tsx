@@ -19,7 +19,7 @@ export const Search: React.FC<Props> = ({ onSearch }) => {
   };
 
   return (
-    <div className="flex gap-2 p-4 bg-gray-100">
+    <div className="flex gap-2 p-4 bg-gray-100 dark:bg-gray-400">
       <input
         value={search}
         placeholder="Enter your query"

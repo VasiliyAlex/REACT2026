@@ -2,6 +2,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { CardList } from '../components/CardList';
 import * as api from '../api/fetchPokemons';
 import { type PokemonDetails } from '../types/pokemon';
+import { Provider } from 'react-redux';
+import { store } from '../store';
 
 jest.mock('../components/Card', () => ({
   Card: ({ pokemon }: { pokemon: PokemonDetails }) => (
@@ -42,14 +44,16 @@ describe('CardList', () => {
     );
 
     render(
-      <CardList
-        search=""
-        page={1}
-        onPageChange={() => {}}
-        onCardClick={() => {}}
-        setIsFading={() => {}}
-        isFading={false}
-      />
+      <Provider store={store}>
+        <CardList
+          search=""
+          page={1}
+          onPageChange={() => {}}
+          onCardClick={() => {}}
+          setIsFading={() => {}}
+          isFading={false}
+        />
+      </Provider>
     );
 
     const skeletons = await screen.findAllByTestId('skeleton');
@@ -59,7 +63,11 @@ describe('CardList', () => {
   it('shows error message if fetch fails', async () => {
     mockedFetchPokemons.mockRejectedValueOnce(new Error('API Error'));
 
-    render(<CardList {...baseProps} />);
+    render(
+      <Provider store={store}>
+        <CardList {...baseProps} />
+      </Provider>
+    );
 
     await waitFor(() =>
       expect(screen.getByText(/Error: API Error/)).toBeInTheDocument()

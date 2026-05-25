@@ -4,30 +4,21 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-export const Pagination = ({
-  currentPage,
-  totalPages,
-  onPageChange,
-}: PaginationProps) => (
+export const Pagination = ({ currentPage, onPageChange }: PaginationProps) => (
   <div className="flex justify-center my-4 gap-2">
     <button
       disabled={currentPage <= 1}
       onClick={() => onPageChange(currentPage - 1)}
-      className="px-3 py-1 bg-gray-300 disabled:opacity-50"
+      className="px-3 py-1 bg-blue-500"
     >
       Prev
     </button>
-
-    <span className="px-3 py-1">
-      <span>{currentPage}</span>
-      <span>/</span>
-      <span>{totalPages}</span>
+    <span className="px-3 py-1 text-gray-600 dark:text-white">
+      {currentPage}
     </span>
-
     <button
-      disabled={currentPage >= totalPages}
       onClick={() => onPageChange(currentPage + 1)}
-      className="px-3 py-1 bg-gray-300 disabled:opacity-50"
+      className="px-3 py-1 bg-blue-500"
     >
       Next
     </button>

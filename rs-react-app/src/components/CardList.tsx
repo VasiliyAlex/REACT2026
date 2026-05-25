@@ -3,8 +3,10 @@ import { fetchPokemons } from '../api/fetchPokemons';
 import { type PokemonDetails } from '../types/pokemon';
 import { fetchPokemonDetails } from '../api/fetchPokemonDetails';
 import { Card } from './Card';
+import { SelectionFooter } from './SelectionFooter';
 import { SkeletonCard } from './SkeletonCard';
 import { Pagination } from './Pagination';
+import { useAppSelector } from '../hooks/storeHooks';
 
 type Props = {
   search: string;
@@ -27,45 +29,46 @@ export const CardList: React.FC<Props> = ({
   const [pokemons, setPokemons] = useState<PokemonDetails[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [localFading, setLocalFading] = useState(false);
+  const selected = useAppSelector((state) => state.selectedPokemons.selected);
+  console.log(selected);
 
   useEffect(() => {
-    const controller = new AbortController();
+    let isMounted = true;
 
-    const timeoutId = setTimeout(async () => {
+    const loadPokemons = async () => {
       setLocalFading(true);
-      setLoading(true);
-      setError('');
+      setTimeout(async () => {
+        setLoading(true);
+        setError('');
 
-      try {
-        const data = await fetchPokemons(search, page, {
-          signal: controller.signal,
-        });
-        const detailsArray = await Promise.all(
-          data.results.map((p) =>
-            fetchPokemonDetails(p.name, { signal: controller.signal })
-          )
-        );
+        try {
+          const data = await fetchPokemons(search, page);
+          const detailsArray = await Promise.all(
+            data.results.map((p) => fetchPokemonDetails(p.name))
+          );
 
-        setPokemons(page === 1 ? detailsArray : [...detailsArray]);
-        setTotalCount(data.total_records);
-      } catch (e) {
-        if (e instanceof Error) {
-          if (e.name !== 'AbortError') {
-            setError(e.message);
+          if (isMounted) {
+            setPokemons(page === 1 ? detailsArray : [...detailsArray]);
+            setTotalCount(data.total_records);
           }
-        } else {
-          setError('Unknown error');
+        } catch (e) {
+          if (isMounted) {
+            setError(e instanceof Error ? e.message : 'Unknown error');
+          }
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+            setLocalFading(false);
+            setIsFading(false);
+          }
         }
-      } finally {
-        setLoading(false);
-        setLocalFading(false);
-        setIsFading(false);
-      }
-    }, 200);
+      }, 200);
+    };
+
+    loadPokemons();
 
     return () => {
-      clearTimeout(timeoutId);
-      controller.abort();
+      isMounted = false;
     };
   }, [page, search, setIsFading]);
 
@@ -74,7 +77,7 @@ export const CardList: React.FC<Props> = ({
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
   return (
-    <div>
+    <div className="pb-24">
       <div className="min-h-[600px] p-4 flex flex-wrap gap-2 justify-center items-center relative">
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -84,8 +87,8 @@ export const CardList: React.FC<Props> = ({
           </div>
         ) : (
           <div
-            className={`flex flex-wrap justify-center gap-4
-            transition-opacity duration-500
+            className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4
+  transition-opacity duration-500
             ${localFading ? 'opacity-0' : 'opacity-100'}`}
           >
             {pokemons.map((pokemon) => (
@@ -106,6 +109,7 @@ export const CardList: React.FC<Props> = ({
           onPageChange={onPageChange}
         />
       )}
+      <SelectionFooter />
     </div>
   );
 };
