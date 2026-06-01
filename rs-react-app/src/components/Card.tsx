@@ -22,7 +22,7 @@ export const Card = React.memo(({ pokemon, onClick }: Props) => {
   const imgSrc = pokemon.sprites?.front_default;
 
   return (
-    <div className="relative group w-40 p-2 bg-gray-100 dark:bg-gray-400 rounded shadow transition-transform hover:scale-105 cursor-pointer">
+    <div className="relative group w-32 p-2 bg-gray-100 dark:bg-gray-400 rounded shadow transition-transform hover:scale-105 cursor-pointer">
       <div onClick={onClick}>
         {imgSrc?.trim() ? (
           <img

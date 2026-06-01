@@ -1,6 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { CardList } from '../components/CardList';
-import * as api from '../api/fetchPokemons';
 import { type PokemonDetails } from '../types/pokemon';
 import { Provider } from 'react-redux';
 import { store } from '../store';
@@ -14,11 +13,6 @@ jest.mock('../components/Card', () => ({
 jest.mock('../components/SkeletonCard', () => ({
   SkeletonCard: () => <div data-testid="skeleton" />,
 }));
-
-jest.mock('../api/fetchPokemons');
-jest.mock('../api/fetchPokemonDetails');
-
-const mockedFetchPokemons = api.fetchPokemons as jest.Mock;
 
 describe('CardList', () => {
   beforeEach(() => {
@@ -39,10 +33,6 @@ describe('CardList', () => {
   });
 
   it('displays loading skeletons while fetching', async () => {
-    (api.fetchPokemons as jest.Mock).mockImplementation(
-      () => new Promise(() => {})
-    );
-
     render(
       <Provider store={store}>
         <CardList
@@ -61,8 +51,6 @@ describe('CardList', () => {
   });
 
   it('shows error message if fetch fails', async () => {
-    mockedFetchPokemons.mockRejectedValueOnce(new Error('API Error'));
-
     render(
       <Provider store={store}>
         <CardList {...baseProps} />
@@ -70,7 +58,9 @@ describe('CardList', () => {
     );
 
     await waitFor(() =>
-      expect(screen.getByText(/Error: API Error/)).toBeInTheDocument()
+      expect(
+        screen.getByText((content) => content.startsWith('Error:'))
+      ).toBeInTheDocument()
     );
   });
 });

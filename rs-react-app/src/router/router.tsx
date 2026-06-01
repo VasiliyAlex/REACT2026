@@ -36,6 +36,7 @@ const routes = [
               return null;
             },
             element: <DetailsPage />,
+            errorElement: <NotFoundPage />,
           },
         ],
       },

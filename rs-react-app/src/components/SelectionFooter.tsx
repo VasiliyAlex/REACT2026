@@ -5,7 +5,6 @@ import { saveAs } from 'file-saver';
 
 export const SelectionFooter: React.FC = () => {
   const selected = useAppSelector((state) => state.selectedPokemons.selected);
-  console.log(selected);
 
   const dispatch = useAppDispatch();
 
