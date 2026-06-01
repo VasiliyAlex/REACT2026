@@ -1,10 +1,14 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { DetailsPage } from '../pages/DetailsPage';
-import { fetchPokemonDetails } from '../api/fetchPokemonDetails';
 import type { PokemonDetails } from '../types/pokemon';
+import { useGetPokemonDetailsQuery } from '../api/pokemonApi';
 
-jest.mock('../api/fetchPokemonDetails');
+jest.mock('../api/pokemonApi', () => ({
+  useGetPokemonDetailsQuery: jest.fn(),
+}));
+
+const mockUseGetPokemonDetailsQuery = useGetPokemonDetailsQuery as jest.Mock;
 
 const mockPokemon: PokemonDetails = {
   id: 1,
@@ -17,13 +21,23 @@ const mockPokemon: PokemonDetails = {
   types: [{ slot: 1, type: { name: 'grass', url: '' } }],
 };
 
-describe('DetailsPage', () => {
+describe('DetailsPage (RTK Query)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('renders loading state initially', async () => {
-    (fetchPokemonDetails as jest.Mock).mockResolvedValue(mockPokemon);
+    mockUseGetPokemonDetailsQuery.mockReturnValue({
+      data: mockPokemon,
+      error: undefined,
+      isLoading: true,
+      refetch: jest.fn(),
+    });
 
     render(
       <MemoryRouter initialEntries={['/details/1']}>
@@ -51,9 +65,11 @@ describe('DetailsPage', () => {
   });
 
   it('renders error message on fetch failure', async () => {
-    (fetchPokemonDetails as jest.Mock).mockRejectedValue(
-      new Error('Failed to fetch')
-    );
+    mockUseGetPokemonDetailsQuery.mockReturnValue({
+      data: undefined,
+      error: new Error('failed to fetch'),
+      refetch: jest.fn(),
+    });
 
     render(
       <MemoryRouter initialEntries={['/details/1']}>
@@ -78,7 +94,11 @@ describe('DetailsPage', () => {
   });
 
   it('renders "No data available" if pokemon is null', async () => {
-    (fetchPokemonDetails as jest.Mock).mockResolvedValue(null);
+    mockUseGetPokemonDetailsQuery.mockReturnValue({
+      data: null,
+      error: undefined,
+      refetch: jest.fn(),
+    });
 
     render(
       <MemoryRouter initialEntries={['/details/1']}>
@@ -88,16 +108,18 @@ describe('DetailsPage', () => {
       </MemoryRouter>
     );
 
-    await waitFor(
-      () => {
-        expect(screen.getByText(/no data available/i)).toBeInTheDocument();
-      },
-      { timeout: 3000 }
-    );
+    await waitFor(() => {
+      expect(screen.queryByTestId('skeleton-details')).not.toBeInTheDocument();
+    });
+    expect(screen.getByText(/no data available/i)).toBeInTheDocument();
   });
 
   it('navigates correctly with page and query params on close', async () => {
-    (fetchPokemonDetails as jest.Mock).mockResolvedValue(mockPokemon);
+    mockUseGetPokemonDetailsQuery.mockReturnValue({
+      data: mockPokemon,
+      error: undefined,
+      refetch: jest.fn(),
+    });
 
     render(
       <MemoryRouter initialEntries={['/2/details/1?q=fire']}>
@@ -115,7 +137,13 @@ describe('DetailsPage', () => {
   });
 
   it('does nothing if detailsId param is missing', () => {
-    const mockFetch = fetchPokemonDetails as jest.Mock;
+    mockUseGetPokemonDetailsQuery.mockReturnValue({
+      data: undefined,
+      error: undefined,
+      isLoading: false,
+      refetch: jest.fn(),
+    });
+
     render(
       <MemoryRouter initialEntries={['/invalid']}>
         <Routes>
@@ -124,13 +152,16 @@ describe('DetailsPage', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByTestId('skeleton-details')).toBeInTheDocument();
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(screen.getByText(/missing pokémon id/i)).toBeInTheDocument();
+    expect(screen.queryByTestId('skeleton-details')).not.toBeInTheDocument();
   });
 
   it('handles unknown error correctly if error is not instance of Error', async () => {
-    (fetchPokemonDetails as jest.Mock).mockImplementation(() => {
-      return Promise.reject('not-an-error-object');
+    mockUseGetPokemonDetailsQuery.mockReturnValue({
+      data: undefined,
+      error: {},
+      isLoading: false,
+      refetch: jest.fn(),
     });
 
     render(
@@ -156,7 +187,11 @@ describe('DetailsPage', () => {
   });
 
   it('renders skeleton if no pokemon yet', () => {
-    (fetchPokemonDetails as jest.Mock).mockResolvedValue(null);
+    mockUseGetPokemonDetailsQuery.mockReturnValue({
+      data: mockPokemon,
+      error: undefined,
+      refetch: jest.fn(),
+    });
 
     render(
       <MemoryRouter initialEntries={['/2/details/1']}>
@@ -170,8 +205,6 @@ describe('DetailsPage', () => {
   });
 
   it('navigates correctly without query param on close', async () => {
-    (fetchPokemonDetails as jest.Mock).mockResolvedValue(mockPokemon);
-
     render(
       <MemoryRouter initialEntries={['/2/details/1']}>
         <Routes>

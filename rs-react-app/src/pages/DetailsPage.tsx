@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchPokemonDetails } from '../api/fetchPokemonDetails';
-import { type PokemonDetails } from '../types/pokemon';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
 import { SkeletonDetails } from '../components/SkeletonDetails';
+import { useGetPokemonDetailsQuery } from '../api/pokemonApi';
+import { RefreshButton } from '../components/RefreshButton';
 
 type DetailsParams = {
   page?: string;
@@ -12,12 +12,18 @@ type DetailsParams = {
 };
 
 export const DetailsPage = () => {
-  const [pokemon, setPokemon] = useState<PokemonDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { page = '1', detailsId } = useParams<DetailsParams>();
   const [searchParams] = useSearchParams();
+  const [loading, setLoading] = useState(true);
+
+  const {
+    data: pokemon,
+    error,
+    refetch,
+  } = useGetPokemonDetailsQuery(detailsId ?? '', {
+    skip: !detailsId,
+  });
 
   const handleClose = () => {
     const q = searchParams.get('q') || '';
@@ -25,35 +31,29 @@ export const DetailsPage = () => {
   };
 
   useEffect(() => {
-    if (!detailsId) return;
+    if (pokemon) {
+      setLoading(true);
+      const timeout = setTimeout(() => setLoading(false), 500);
+      return () => clearTimeout(timeout);
+    } else {
+      setLoading(false);
+    }
+  }, [pokemon, error]);
 
-    const loadPokemon = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        const start = Date.now();
-        const data = await fetchPokemonDetails(detailsId);
-        setPokemon(data);
-
-        const elapsed = Date.now() - start;
-        const delay = Math.max(2000 - elapsed, 0);
-
-        setTimeout(() => setLoading(false), delay);
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'unknown error';
-        setError(errorMessage);
-        const elapsed = Date.now() - start;
-        const delay = Math.max(2000 - elapsed, 0);
-        setTimeout(() => setLoading(false), delay);
-      }
-    };
-    const start = Date.now();
-    loadPokemon();
-  }, [detailsId]);
+  if (!detailsId) {
+    return <div className="p-4 text-red-500">Missing Pokémon ID</div>;
+  }
 
   if (loading) return <SkeletonDetails />;
-  if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
+  if (error) {
+    const errorMessage =
+      error instanceof Error
+        ? `Error: ${error.message}`
+        : 'Error: unknown error';
+
+    return <div className="p-4 text-red-500">{errorMessage}</div>;
+  }
+
   if (!pokemon) return <div className="p-4">No data available</div>;
 
   return (
@@ -78,12 +78,15 @@ export const DetailsPage = () => {
           <strong>Weight:</strong> {pokemon.weight}
         </li>
       </ul>
-      <button
-        className="ml-auto px-4 py-1 bg-blue-500 text-white p-2 "
-        onClick={handleClose}
-      >
-        Close
-      </button>
+      <div className="flex justify-end p-4 gap-2">
+        <button
+          className="ml-auto px-4 py-1 bg-blue-500 text-white p-2 "
+          onClick={handleClose}
+        >
+          Close
+        </button>
+        <RefreshButton onRefresh={() => refetch()} />
+      </div>
     </div>
   );
 };
