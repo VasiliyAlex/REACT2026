@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { PokeResponse, PokemonDetails, Pokemon } from '../types/pokemon';
 
 const PAGE_LIMIT = 12;
-const CACHE_TTL = Number(import.meta.env.VITE_CACHE_TTL ?? 300);
+const CACHE_TTL = 300;
 
 export const pokemonApi = createApi({
   reducerPath: 'pokemonApi',
