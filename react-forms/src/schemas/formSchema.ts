@@ -32,21 +32,24 @@ export const formSchema = z
 
     image: z
   .any()
-  .refine((files) => files && files.length > 0, {
+    .refine((files) => files?.length > 0, {
     message: "Image is required",
   })
-  .refine((files) => {
-    const file = files[0] as File;
-    return ALLOWED_IMAGE_TYPES.includes(file.type);
-  }, {
-    message: "Only PNG or JPEG allowed",
-  })
-  .refine((files) => {
-    const file = files[0] as File;
-    return file.size <= MAX_IMAGE_SIZE;
-  }, {
-    message: "Image must be less than 2MB",
-  }),
+ .refine((files) => {
+  const file = files?.[0];
+  if (!file) return false;
+  return ALLOWED_IMAGE_TYPES.includes(file.type);
+}, {
+  message: "Only PNG or JPEG allowed",
+})
+.refine((files) => {
+  const file = files?.[0];
+  if (!file) return false;
+
+  return file.size <= MAX_IMAGE_SIZE;
+}, {
+  message: "Image must be less than 2MB",
+})
   })
   .superRefine((data, ctx) => {
     if (data.password !== data.confirmPassword) {

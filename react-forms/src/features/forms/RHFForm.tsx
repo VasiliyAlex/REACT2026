@@ -122,8 +122,8 @@ export function ReactHookForm({
       </div>
 
       <div>
-        <label>Gender</label>
-        <select {...register("gender")} className={inputClass}>
+      <label htmlFor="gender">Gender</label>
+        <select  id="gender" {...register("gender")} className={inputClass}>
           <option value="">Select</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
@@ -134,8 +134,8 @@ export function ReactHookForm({
       </div>
 
       <div>
-        <label>Country</label>
-        <input
+       <label htmlFor="country">Country</label>
+        <input id="country"
           {...register("country")}
           list="countries"
           className={inputClass}
@@ -151,8 +151,8 @@ export function ReactHookForm({
       </div>
 
       <div>
-        <label>Password</label>
-        <input
+       <label htmlFor="password">Password</label>
+        <input id="password"
           type="password"
           {...register("password")}
           className={inputClass}
@@ -167,8 +167,9 @@ export function ReactHookForm({
       </div>
 
       <div>
-        <label>Confirm Password</label>
+        <label htmlFor="confirmPassword">Confirm Password</label>
         <input
+          id="confirmPassword"
           type="password"
           {...register("confirmPassword")}
           className={inputClass}
@@ -179,8 +180,8 @@ export function ReactHookForm({
       </div>
 
       <div>
-        <label>Image</label>
-        <input type="file" {...register("image")} className={inputClass} />
+       <label htmlFor="image">Image</label>
+        <input id="image" type="file" {...register("image")} className={inputClass} />
         {errors.image && (
           <p className="text-red-500">{errors.image.message as string}</p>
         )}

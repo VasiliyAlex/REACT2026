@@ -10,6 +10,7 @@ interface UncontrolledFormProps {
 export function UncontrolledForm({
   onClose,
 }: UncontrolledFormProps) {
+  console.log("render form");
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [passwordValue, setPasswordValue] = useState("");
 
