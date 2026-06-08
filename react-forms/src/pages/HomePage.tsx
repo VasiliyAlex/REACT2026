@@ -1,30 +1,22 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-import { Modal } from '../components/Modal/Modal';
+import { Modal } from "../components/Modal/Modal";
 
-import { RHFForm } from '../features/forms/RHFForm';
-import { UncontrolledForm } from '../features/forms/UncontrolledForm';
+import { ReactHookForm } from "../features/forms/RHFForm";
+import { UncontrolledForm } from "../features/forms/UncontrolledForm";
 
 export function HomePage() {
-  const [
-    uncontrolledOpen,
-    setUncontrolledOpen,
-  ] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
 
-  const [rhfOpen, setRhfOpen] =
-    useState(false);
+  const [rhfOpen, setRhfOpen] = useState(false);
 
   return (
     <main className="flex flex-col gap-4 p-8">
-      <h1 className="mb-4 text-3xl font-bold">
-        React Forms
-      </h1>
+      <h1 className="mb-4 text-3xl font-bold">React Forms</h1>
 
       <button
         type="button"
-        onClick={() =>
-          setUncontrolledOpen(true)
-        }
+        onClick={() => setUncontrolledOpen(true)}
         className="rounded border px-4 py-2"
       >
         Open Uncontrolled Form
@@ -41,11 +33,9 @@ export function HomePage() {
       <Modal
         isOpen={uncontrolledOpen}
         title="Uncontrolled Form"
-        onClose={() =>
-          setUncontrolledOpen(false)
-        }
+        onClose={() => setUncontrolledOpen(false)}
       >
-        <UncontrolledForm />
+        <UncontrolledForm onClose={() => setUncontrolledOpen(false)} />
       </Modal>
 
       <Modal
@@ -53,7 +43,7 @@ export function HomePage() {
         title="React Hook Form"
         onClose={() => setRhfOpen(false)}
       >
-        <RHFForm />
+        <ReactHookForm onClose={() => setRhfOpen(false)} />
       </Modal>
     </main>
   );

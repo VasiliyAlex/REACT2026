@@ -3,9 +3,13 @@ import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { addSubmission } from "../submissions/submissionsSlice";
 import { formSchema } from "../../schemas/formSchema";
 import { fileToBase64 } from "../../utils/fileToBase64";
-import { MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES } from "../../utils/constants";
 
-export function UncontrolledForm() {
+interface UncontrolledFormProps {
+  onClose: () => void;
+}
+export function UncontrolledForm({
+  onClose,
+}: UncontrolledFormProps) {
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [passwordValue, setPasswordValue] = useState("");
 
@@ -42,25 +46,6 @@ export function UncontrolledForm() {
     const fileEntry = formData.get("image");
     let imageBase64 = "";
 
-    if (fileEntry instanceof File && fileEntry.size > 0) {
-      if (!ALLOWED_IMAGE_TYPES.includes(fileEntry.type)) {
-        setErrors({ image: ["Only PNG or JPEG allowed"] });
-        return;
-      }
-
-      if (fileEntry.size > MAX_IMAGE_SIZE) {
-        setErrors({ image: ["Image must be less than 2MB"] });
-        return;
-      }
-
-      imageBase64 = await fileToBase64(fileEntry);
-    }
-
-    if (!data.terms) {
-      setErrors({ terms: ["You must accept Terms & Conditions"] });
-      return;
-    }
-
     const result = formSchema.safeParse({
       name: String(data.name || ""),
       age: Number(data.age),
@@ -69,11 +54,20 @@ export function UncontrolledForm() {
       country: String(data.country || ""),
       password: String(data.password || ""),
       confirmPassword: String(data.confirmPassword || ""),
+      terms: Boolean(data.terms),
+      image:
+        fileEntry instanceof File && fileEntry.size > 0
+          ? [fileEntry]
+          : undefined,
     });
 
     if (!result.success) {
       setErrors(result.error.flatten().fieldErrors);
       return;
+    }
+
+    if (fileEntry instanceof File && fileEntry.size > 0) {
+      imageBase64 = await fileToBase64(fileEntry);
     }
 
     if (!countries.includes(String(data.country))) {
@@ -99,6 +93,7 @@ export function UncontrolledForm() {
 
     e.currentTarget.reset();
     setPasswordValue("");
+    onClose();
   };
 
   const inputClass =
