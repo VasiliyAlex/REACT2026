@@ -78,7 +78,7 @@ export function Modal({
     >
       <h2
         id="modal-title"
-        className="mb-4 text-2xl font-semibold"
+        className="text-2xl font-bold text-center text-black mb-6"
       >
         {title}
       </h2>
